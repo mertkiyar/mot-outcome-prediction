@@ -28,14 +28,14 @@ with ZipFile(zip_path, "r") as archive:
             print(reader.fieldnames)
 
             print("\nFirst 5 Records")
-            for row in islice(reader, 5):
-                # print(
-                #     row["test_date"],
-                #     row["test_class_id"],
-                #     row["make"],
-                #     row["model"],
-                #     row["test_result"]
-                # )
+            # for row in islice(reader, 5):
+            #     # print(
+            #     #     row["test_date"],
+            #     #     row["test_class_id"],
+            #     #     row["make"],
+            #     #     row["model"],
+            #     #     row["test_result"]
+            #     # )
 
-                for row in islice(reader, 50):
+            for row in islice(reader, 50):
                     print(row)
