@@ -3,6 +3,7 @@ import csv
 from pathlib import Path
 from zipfile import ZipFile
 from io import TextIOWrapper
+from itertools import islice
 
 # project directory path
 project_dir = Path(__file__).resolve().parent
@@ -25,3 +26,13 @@ with ZipFile(zip_path, "r") as archive:
             reader = csv.DictReader(text_file)
             print("\nColumns:")
             print(reader.fieldnames)
+
+            print("\nFirst 5 Records")
+            for row in islice(reader, 5):
+                print(
+                    row["test_date"],
+                    row["test_class_id"],
+                    row["make"],
+                    row["model"],
+                    row["test_result"]
+                )
