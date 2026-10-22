@@ -1,4 +1,5 @@
 import csv
+import pandas as pd
 
 from pathlib import Path
 from zipfile import ZipFile
@@ -37,5 +38,10 @@ with ZipFile(zip_path, "r") as archive:
             #     #     row["test_result"]
             #     # )
 
-            for row in islice(reader, 50):
-                    print(row)
+            records = list(islice(reader, 50))
+            df = pd.DataFrame(records)
+
+            print("\nFirst 50 Records")
+            print(df.to_string(index=False))
+
+            print("\nShape:", df.shape)
