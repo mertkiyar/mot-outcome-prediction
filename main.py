@@ -28,10 +28,17 @@ with ZipFile(zip_path, "r") as archive:
             print("\nColumns:")
             print(reader.fieldnames)
 
-            records = list(islice(reader, 50))
+            eligible_records = (
+                row for row in reader
+                if row["test_class_id"] == "4"
+                   and row["test_type"] == "NT"
+                   and row["test_result"] in {"P", "F", "PRS"}
+            )
+
+            records = list(islice(eligible_records, 50))
             df = pd.DataFrame(records)
 
-            print("\nFirst 50 Records")
+            print("\nFirst 50 Eligible Records")
             print(df.to_string(index=False))
 
             print("\nShape:", df.shape)
