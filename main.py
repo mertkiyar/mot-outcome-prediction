@@ -5,6 +5,7 @@ from pathlib import Path
 from zipfile import ZipFile
 from io import TextIOWrapper
 from itertools import islice
+from collections import Counter
 
 # project directory path
 project_dir = Path(__file__).resolve().parent
@@ -20,7 +21,6 @@ january_file_path = (
     "dft_test_result_extract_202501.csv"
 )
 
-# open the zip file, after print the column names
 with ZipFile(zip_path, "r") as archive:
     with archive.open(january_file_path) as binary_file:
         with TextIOWrapper(binary_file, encoding="utf-8-sig", newline="") as text_file:
@@ -35,10 +35,46 @@ with ZipFile(zip_path, "r") as archive:
                    and row["test_result"] in {"P", "F", "PRS"}
             )
 
-            records = list(islice(eligible_records, 50))
+            result_counts = Counter()
+            records = []
+
+            print("\nCounting eligible records...")
+
+            for row in eligible_records:
+                result_counts[row["test_result"]] += 1
+
+                if len(records) < 50:
+                    records.append(row)
             df = pd.DataFrame(records)
 
             print("\nFirst 50 Eligible Records")
             print(df.to_string(index=False))
 
             print("\nShape:", df.shape)
+
+            total_count = sum(result_counts.values())
+
+            print("\nTotal Eligible Records:", total_count)
+
+            summary_rows = []
+
+            for result in ("P", "F", "PRS"):
+                count = result_counts[result]
+                percentage = count / total_count * 100 if total_count else 0
+
+                summary_rows.append({
+                    "result": result,
+                    "count": count,
+                    "percentage": round(percentage, 2)
+                })
+
+            summary = pd.DataFrame(summary_rows)
+
+            print("\nResult Distribution (%)")
+            print(summary.to_string(index=False))
+
+            direct_pass_count = result_counts["P"]
+            initial_defect_count = result_counts["F"] + result_counts["PRS"]
+
+            print("\nDirect Pass:", direct_pass_count)
+            print("Initial Defect:", initial_defect_count)
