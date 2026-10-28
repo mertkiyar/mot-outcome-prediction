@@ -36,6 +36,45 @@ def read_month(zip_path, month_file_path, preview_size=50):
 
     return records, result_counts, column_names
 
+def display_results(records, result_counts, column_names):
+    print("\nColumns:")
+    print(column_names)
+
+    df = pd.DataFrame(records)
+
+    print("\nFirst 50 Eligible Records")
+    print(df.to_string(index=False))
+
+    print("\nShape:", df.shape)
+
+    total_count = sum(result_counts.values())
+
+    print("\nTotal Eligible Records:", total_count)
+
+    summary_rows = []
+
+    for result in ("P", "F", "PRS"):
+        count = result_counts[result]
+        percentage = count / total_count * 100 if total_count else 0
+
+        summary_rows.append({
+            "result": result,
+            "count": count,
+            "percentage": round(percentage, 2)
+        })
+
+    summary = pd.DataFrame(summary_rows)
+
+    print("\nResult Distribution (%)")
+    print(summary.to_string(index=False))
+
+    direct_pass_count = result_counts["P"]
+    initial_defect_count = result_counts["F"] + result_counts["PRS"]
+
+    print("\nDirect Pass:", direct_pass_count)
+    print("Initial Defect:", initial_defect_count)
+
+
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
@@ -57,39 +96,4 @@ records, result_counts, column_names = read_month(
     january_file_path
 )
 
-print("\nColumns:")
-print(column_names)
-
-df = pd.DataFrame(records)
-
-print("\nFirst 50 Eligible Records")
-print(df.to_string(index=False))
-
-print("\nShape:", df.shape)
-
-total_count = sum(result_counts.values())
-
-print("\nTotal Eligible Records:", total_count)
-
-summary_rows = []
-
-for result in ("P", "F", "PRS"):
-    count = result_counts[result]
-    percentage = count / total_count * 100 if total_count else 0
-
-    summary_rows.append({
-        "result": result,
-        "count": count,
-        "percentage": round(percentage, 2)
-    })
-
-summary = pd.DataFrame(summary_rows)
-
-print("\nResult Distribution (%)")
-print(summary.to_string(index=False))
-
-direct_pass_count = result_counts["P"]
-initial_defect_count = result_counts["F"] + result_counts["PRS"]
-
-print("\nDirect Pass:", direct_pass_count)
-print("Initial Defect:", initial_defect_count)
+display_results(records, result_counts, column_names)
