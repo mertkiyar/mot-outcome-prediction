@@ -7,6 +7,13 @@ from io import TextIOWrapper
 from itertools import islice
 from collections import Counter
 
+def is_eligible(row):
+    return (
+        row["test_class_id"] == "4"
+        and row["test_type"] == "NT"
+        and row["test_result"] in {"P", "F", "PRS"}
+    )
+
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
@@ -30,9 +37,7 @@ with ZipFile(zip_path, "r") as archive:
 
             eligible_records = (
                 row for row in reader
-                if row["test_class_id"] == "4"
-                   and row["test_type"] == "NT"
-                   and row["test_result"] in {"P", "F", "PRS"}
+                if is_eligible(row)
             )
 
             result_counts = Counter()
