@@ -50,47 +50,46 @@ january_file_path = (
     "dft_test_result_extract_202501.csv"
 )
 
-with ZipFile(zip_path, "r") as archive:
-    print("\nCounting eligible records...")
+print("\nCounting eligible records...")
 
-    records, result_counts, column_names = read_month(
-        zip_path,
-        january_file_path
-    )
+records, result_counts, column_names = read_month(
+    zip_path,
+    january_file_path
+)
 
-    print("\nColumns:")
-    print(column_names)
+print("\nColumns:")
+print(column_names)
 
-    df = pd.DataFrame(records)
+df = pd.DataFrame(records)
 
-    print("\nFirst 50 Eligible Records")
-    print(df.to_string(index=False))
+print("\nFirst 50 Eligible Records")
+print(df.to_string(index=False))
 
-    print("\nShape:", df.shape)
+print("\nShape:", df.shape)
 
-    total_count = sum(result_counts.values())
+total_count = sum(result_counts.values())
 
-    print("\nTotal Eligible Records:", total_count)
+print("\nTotal Eligible Records:", total_count)
 
-    summary_rows = []
+summary_rows = []
 
-    for result in ("P", "F", "PRS"):
-        count = result_counts[result]
-        percentage = count / total_count * 100 if total_count else 0
+for result in ("P", "F", "PRS"):
+    count = result_counts[result]
+    percentage = count / total_count * 100 if total_count else 0
 
-        summary_rows.append({
-            "result": result,
-            "count": count,
-            "percentage": round(percentage, 2)
-        })
+    summary_rows.append({
+        "result": result,
+        "count": count,
+        "percentage": round(percentage, 2)
+    })
 
-    summary = pd.DataFrame(summary_rows)
+summary = pd.DataFrame(summary_rows)
 
-    print("\nResult Distribution (%)")
-    print(summary.to_string(index=False))
+print("\nResult Distribution (%)")
+print(summary.to_string(index=False))
 
-    direct_pass_count = result_counts["P"]
-    initial_defect_count = result_counts["F"] + result_counts["PRS"]
+direct_pass_count = result_counts["P"]
+initial_defect_count = result_counts["F"] + result_counts["PRS"]
 
-    print("\nDirect Pass:", direct_pass_count)
-    print("Initial Defect:", initial_defect_count)
+print("\nDirect Pass:", direct_pass_count)
+print("Initial Defect:", initial_defect_count)
