@@ -13,6 +13,29 @@ def is_eligible(row):
         and row["test_result"] in {"P", "F", "PRS"}
     )
 
+def read_month(zip_path, month_file_path, preview_size=50):
+    result_counts = Counter()
+    records = []
+
+    with ZipFile(zip_path, "r") as archive:
+        with archive.open(month_file_path) as binary_file:
+            with TextIOWrapper(
+                binary_file,
+                encoding="utf-8-sig",
+                newline=""
+            ) as text_file:
+                reader = csv.DictReader(text_file)
+                column_names = reader.fieldnames
+
+                for row in reader:
+                    if is_eligible(row):
+                        result_counts[row["test_result"]] += 1
+
+                        if len(records) < preview_size:
+                            records.append(row)
+
+    return records, result_counts, column_names
+
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
@@ -28,57 +51,46 @@ january_file_path = (
 )
 
 with ZipFile(zip_path, "r") as archive:
-    with archive.open(january_file_path) as binary_file:
-        with TextIOWrapper(binary_file, encoding="utf-8-sig", newline="") as text_file:
-            reader = csv.DictReader(text_file)
-            print("\nColumns:")
-            print(reader.fieldnames)
+    print("\nCounting eligible records...")
 
-            eligible_records = (
-                row for row in reader
-                if is_eligible(row)
-            )
+    records, result_counts, column_names = read_month(
+        zip_path,
+        january_file_path
+    )
 
-            result_counts = Counter()
-            records = []
+    print("\nColumns:")
+    print(column_names)
 
-            print("\nCounting eligible records...")
+    df = pd.DataFrame(records)
 
-            for row in eligible_records:
-                result_counts[row["test_result"]] += 1
+    print("\nFirst 50 Eligible Records")
+    print(df.to_string(index=False))
 
-                if len(records) < 50:
-                    records.append(row)
-            df = pd.DataFrame(records)
+    print("\nShape:", df.shape)
 
-            print("\nFirst 50 Eligible Records")
-            print(df.to_string(index=False))
+    total_count = sum(result_counts.values())
 
-            print("\nShape:", df.shape)
+    print("\nTotal Eligible Records:", total_count)
 
-            total_count = sum(result_counts.values())
+    summary_rows = []
 
-            print("\nTotal Eligible Records:", total_count)
+    for result in ("P", "F", "PRS"):
+        count = result_counts[result]
+        percentage = count / total_count * 100 if total_count else 0
 
-            summary_rows = []
+        summary_rows.append({
+            "result": result,
+            "count": count,
+            "percentage": round(percentage, 2)
+        })
 
-            for result in ("P", "F", "PRS"):
-                count = result_counts[result]
-                percentage = count / total_count * 100 if total_count else 0
+    summary = pd.DataFrame(summary_rows)
 
-                summary_rows.append({
-                    "result": result,
-                    "count": count,
-                    "percentage": round(percentage, 2)
-                })
+    print("\nResult Distribution (%)")
+    print(summary.to_string(index=False))
 
-            summary = pd.DataFrame(summary_rows)
+    direct_pass_count = result_counts["P"]
+    initial_defect_count = result_counts["F"] + result_counts["PRS"]
 
-            print("\nResult Distribution (%)")
-            print(summary.to_string(index=False))
-
-            direct_pass_count = result_counts["P"]
-            initial_defect_count = result_counts["F"] + result_counts["PRS"]
-
-            print("\nDirect Pass:", direct_pass_count)
-            print("Initial Defect:", initial_defect_count)
+    print("\nDirect Pass:", direct_pass_count)
+    print("Initial Defect:", initial_defect_count)
