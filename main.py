@@ -1,6 +1,7 @@
 import csv
 import pandas as pd
 import random
+import json
 
 from pathlib import Path
 from zipfile import ZipFile
@@ -145,3 +146,64 @@ print(df.head(10).to_string(index=False))
 
 print("\nSample Result Counts:")
 print(df["test_result"].value_counts().to_string())
+
+output_dir = project_dir / "data" / "processed"
+output_dir.mkdir(parents=True, exist_ok=True)
+sample_path = output_dir / f"mot_2025_sample_{sample_size}.csv"
+
+df.to_csv(
+    sample_path,
+    index=False,
+    encoding="utf-8"
+)
+
+print("\nSample saved to:", sample_path)
+
+metadata = {
+    "dataset_year": 2025,
+    "source_url": (
+        "https://open.data.dvsa.gov.uk/"
+        "mot-anonymised/index.html"
+    ),
+    "source_archive": zip_path.name,
+    "source_archive_size_bytes": zip_path.stat().st_size,
+    "months": list(range(1, 13)),
+    "sampling_method": "reservoir sampling",
+    "seed": seed,
+    "requested_sample_size": sample_size,
+    "saved_sample_size": len(df),
+    "eligible_records_seen": seen_count,
+    "filters": {
+        "test_class_id": "4",
+        "test_type": "NT",
+        "test_result": ["P", "F", "PRS"]
+    },
+    "sample_result_counts": {
+        result: int(count)
+        for result, count in df["test_result"].value_counts().items()
+    },
+    "columns": df.columns.tolist()
+}
+
+metadata_path = (
+    output_dir / f"mot_2025_sample_{sample_size}_metadata.json"
+)
+
+metadata_path.write_text(
+    json.dumps(metadata, indent=4, ensure_ascii=False),
+    encoding="utf-8"
+)
+
+print("Metadata saved to:", metadata_path)
+
+saved_df = pd.read_csv(
+    sample_path,
+    dtype=str,
+    keep_default_na=False
+)
+
+assert saved_df.shape == df.shape
+assert saved_df.columns.tolist() == df.columns.tolist()
+assert saved_df["test_id"].tolist() == df["test_id"].tolist()
+
+print("\nSaved Sample Shape:", saved_df.shape)
