@@ -24,7 +24,7 @@ def read_month(zip_path, month_file_path, preview_size=50):
                 encoding="utf-8-sig",
                 newline=""
             ) as text_file:
-                reader = csv.DictReader(text_file)
+                reader = csv.DictReader(text_file, escapechar="\\")
                 column_names = reader.fieldnames
 
                 for row in reader:
@@ -78,22 +78,26 @@ def display_results(records, result_counts, column_names):
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
+month = 2
+
+if not 1 <= month <= 12:
+    raise ValueError("Month must be between 1 and 12")
 
 # open the zip file, after print file name and size
 with ZipFile(zip_path, "r") as archive:
     for file in archive.infolist():
         print(file.filename, f"{file.file_size / 1_000_000:.1f} MB")
 
-january_file_path = (
+month_file_path = (
     "dft_test_result_extracts_2025/"
-    "dft_test_result_extract_202501.csv"
+    f"dft_test_result_extract_2025{month:02d}.csv"
 )
 
-print("\nCounting eligible records...")
+print(f"\nCounting eligible records for month {month:02d}...")
 
 records, result_counts, column_names = read_month(
     zip_path,
-    january_file_path
+    month_file_path
 )
 
 display_results(records, result_counts, column_names)
