@@ -4,7 +4,6 @@ import pandas as pd
 from pathlib import Path
 from zipfile import ZipFile
 from io import TextIOWrapper
-from itertools import islice
 from collections import Counter
 
 def is_eligible(row):
