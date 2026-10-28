@@ -93,38 +93,55 @@ def reservoir_sample(rows, sample_size, seed=42):
                 sample[index] = row
 
     return sample, seen_count
+
+def iter_eligible_records(zip_path):
+    with ZipFile(zip_path, "r") as archive:
+        for month in range(1, 13):
+            month_file_path = (
+                "dft_test_result_extracts_2025/"
+                f"dft_test_result_extract_2025{month:02d}.csv"
+            )
+
+            print(f"Reading month {month:02d}...")
+
+            with archive.open(month_file_path) as binary_file:
+                with TextIOWrapper(
+                    binary_file,
+                    encoding="utf-8-sig",
+                    newline=""
+                ) as text_file:
+                    reader = csv.DictReader(
+                        text_file,
+                        escapechar="\\"
+                    )
+
+                    for row in reader:
+                        if is_eligible(row):
+                            yield row
+
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
-month = 2
+sample_size = 10000
+seed = 42
 
-if not 1 <= month <= 12:
-    raise ValueError("Month must be between 1 and 12")
+eligible_rows = iter_eligible_records(zip_path)
 
-# open the zip file, after print file name and size
-with ZipFile(zip_path, "r") as archive:
-    for file in archive.infolist():
-        print(file.filename, f"{file.file_size / 1_000_000:.1f} MB")
-
-month_file_path = (
-    "dft_test_result_extracts_2025/"
-    f"dft_test_result_extract_2025{month:02d}.csv"
-)
-
-print(f"\nCounting eligible records for month {month:02d}...")
-
-records, result_counts, column_names = read_month(
-    zip_path,
-    month_file_path
-)
-
-display_results(records, result_counts, column_names)
+print("\nBuilding annual random sample...")
 
 sample, seen_count = reservoir_sample(
-    range(1, 11),
-    sample_size=3,
-    seed=42
+    eligible_rows,
+    sample_size=sample_size,
+    seed=seed
 )
 
-print("\nSample:", sample)
-print("Seen Records:", seen_count)
+df = pd.DataFrame(sample)
+
+print("\nTotal Eligible Records Seen:", seen_count)
+print("Sample Shape:", df.shape)
+
+print("\nSample Preview:")
+print(df.head(10).to_string(index=False))
+
+print("\nSample Result Counts:")
+print(df["test_result"].value_counts().to_string())
