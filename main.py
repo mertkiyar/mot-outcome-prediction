@@ -1,5 +1,6 @@
 import csv
 import pandas as pd
+import random
 
 from pathlib import Path
 from zipfile import ZipFile
@@ -74,7 +75,24 @@ def display_results(records, result_counts, column_names):
     print("\nDirect Pass:", direct_pass_count)
     print("Initial Defect:", initial_defect_count)
 
+def reservoir_sample(rows, sample_size, seed=42):
+    if sample_size <= 0:
+        raise ValueError("Sample size must be positive")
 
+    rng = random.Random(seed)
+    sample = []
+    seen_count = 0
+
+    for seen_count, row in enumerate(rows, start=1):
+        if len(sample) < sample_size:
+            sample.append(row)
+        else:
+            index = rng.randrange(seen_count)
+
+            if index < sample_size:
+                sample[index] = row
+
+    return sample, seen_count
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
@@ -101,3 +119,12 @@ records, result_counts, column_names = read_month(
 )
 
 display_results(records, result_counts, column_names)
+
+sample, seen_count = reservoir_sample(
+    range(1, 11),
+    sample_size=3,
+    seed=42
+)
+
+print("\nSample:", sample)
+print("Seen Records:", seen_count)
