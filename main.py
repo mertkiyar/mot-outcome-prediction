@@ -123,7 +123,7 @@ def iter_eligible_records(zip_path):
 # project directory path
 project_dir = Path(__file__).resolve().parent
 zip_path = project_dir / "data" / "raw" / "dft_test_result_extracts_2025.zip"
-sample_size = 10000
+sample_size = 50000
 seed = 42
 
 eligible_rows = iter_eligible_records(zip_path)
