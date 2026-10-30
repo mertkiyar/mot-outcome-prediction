@@ -72,9 +72,6 @@ feature_columns = [
 
 target_column = "initial_defect"
 
-X = df[feature_columns].copy()
-y = df[target_column].copy()
-
 print("Sample Shape:", df.shape)
 
 print("\nSample Preview:")
@@ -111,12 +108,6 @@ print(df[numeric_columns].isna().sum().to_string())
 
 print("\nNumeric Summary:")
 print(df[numeric_columns].describe().to_string())
-
-print("\nFeature Columns:")
-print(X.columns.tolist())
-
-print("\nFeature Shape:", X.shape)
-print("Target Shape:", y.shape)
 
 blank_values = df.apply(
     lambda column: column.astype("string").str.strip().eq("")
@@ -318,3 +309,54 @@ print(
     .head(15)
     .to_string(index=False)
 )
+
+model_df = df.copy()
+
+reviewed_capacity_ids = [
+    "1996280571",
+    "244371975"
+]
+
+questionable_capacity = model_df["test_id"].isin(
+    reviewed_capacity_ids
+)
+
+model_df.loc[
+    questionable_capacity,
+    "cylinder_capacity"
+] = float("nan")
+
+model_df["zero_mileage_flag"] = (
+    model_df["test_mileage"].eq(0)
+)
+
+model_df["fuel_capacity_conflict"] = (
+    model_df["fuel_type_standardized"].eq("EL")
+    & model_df["cylinder_capacity"].notna()
+)
+
+model_df.loc[
+    model_df["fuel_capacity_conflict"],
+    "fuel_type_standardized"
+] = "UNKNOWN"
+
+X = model_df[feature_columns].copy()
+y = model_df[target_column].copy()
+
+print("\nPreparation Summary:")
+print("Rows Before:", len(df))
+print("Rows After:", len(model_df))
+print("Capacities Set to Missing:", questionable_capacity.sum())
+print("Zero Mileage Records:", model_df["zero_mileage_flag"].sum())
+print("Fuel Conflicts:", model_df["fuel_capacity_conflict"].sum())
+
+print(
+    "Missing Engine Capacity After:",
+    model_df["cylinder_capacity"].isna().sum()
+)
+
+print("\nFeature Columns:")
+print(X.columns.tolist())
+
+print("\nFeature Shape:", X.shape)
+print("Target Shape:", y.shape)
