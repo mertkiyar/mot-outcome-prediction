@@ -144,3 +144,41 @@ repeated_vehicles = vehicle_counts[vehicle_counts > 1]
 print("\nUnique Vehicles:", df["vehicle_id"].nunique())
 print("Vehicles With Multiple Records:", len(repeated_vehicles))
 print("Records From These Vehicles:", repeated_vehicles.sum())
+
+capacity_audit = df[["fuel_type", "cylinder_capacity"]].copy()
+
+capacity_audit["capacity_missing"] = (
+    capacity_audit["cylinder_capacity"].isna()
+)
+
+capacity_summary = capacity_audit.groupby("fuel_type").agg(
+    total_records=("capacity_missing", "size"),
+    missing_capacity=("capacity_missing", "sum")
+)
+
+capacity_summary["missing_percentage"] = (
+    capacity_summary["missing_capacity"]
+    / capacity_summary["total_records"]
+    * 100
+).round(2)
+
+capacity_summary = capacity_summary.sort_values(
+    "missing_capacity",
+    ascending=False
+)
+
+print("\nMissing Engine Capacity by Fuel Type:")
+print(capacity_summary.to_string())
+
+assert (
+    capacity_summary["missing_capacity"].sum()
+    == df["cylinder_capacity"].isna().sum()
+), "Missing capacity counts do not match"
+
+print("\nMissing Engine Capacity Preview:")
+print(
+    df.loc[
+        df["cylinder_capacity"].isna(),
+        ["test_id", "make", "model", "fuel_type", "cylinder_capacity"]
+    ].head(15).to_string(index=False)
+)
