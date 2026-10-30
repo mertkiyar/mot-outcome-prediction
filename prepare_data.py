@@ -182,3 +182,51 @@ print(
         ["test_id", "make", "model", "fuel_type", "cylinder_capacity"]
     ].head(15).to_string(index=False)
 )
+
+print("\nFuel Type Counts:")
+print(
+    df["fuel_type"]
+    .value_counts(dropna=False)
+    .to_string()
+)
+
+text_columns = ["make", "model", "colour", "fuel_type"]
+
+text_audit = df[text_columns].apply(
+    lambda column: column.astype("string").str.strip().str.upper()
+)
+
+uncertain_labels = [
+    "UNCLASSIFIED",
+    "UNKNOWN",
+    "NOT STATED",
+    "NOT KNOWN",
+    "N/A"
+]
+
+uncertain_summary = pd.DataFrame({
+    column: text_audit[column].value_counts().reindex(
+        uncertain_labels,
+        fill_value=0
+    )
+    for column in text_columns
+})
+
+print("\nUncertain Label Counts:")
+print(uncertain_summary.to_string())
+
+for column in ["make", "model"]:
+    print(f"\nTop 20 Values: {column}")
+    print(text_audit[column].value_counts().head(20).to_string())
+
+uncertain_mask = text_audit.isin(uncertain_labels).any(axis=1)
+
+print("\nRecords With Uncertain Labels:", uncertain_mask.sum())
+
+print("\nUncertain Label Preview:")
+print(
+    df.loc[
+        uncertain_mask,
+        ["test_id", "make", "model", "colour", "fuel_type"]
+    ].head(15).to_string(index=False)
+)
