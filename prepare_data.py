@@ -41,6 +41,28 @@ df["vehicle_age"] = (
 
 df["test_month"] = df["test_date"].dt.month.astype("Int64")
 
+numeric_columns = ["test_mileage", "cylinder_capacity"]
+
+for column in numeric_columns:
+    df[column] = pd.to_numeric(
+        df[column],
+        errors="coerce"
+    )
+
+feature_columns = [
+    "vehicle_age",
+    "test_mileage",
+    "cylinder_capacity",
+    "fuel_type",
+    "make",
+    "test_month"
+]
+
+target_column = "initial_defect"
+
+X = df[feature_columns].copy()
+y = df[target_column].copy()
+
 print("Sample Shape:", df.shape)
 
 print("\nSample Preview:")
@@ -68,3 +90,18 @@ print("\nNegative Vehicle Ages:", (df["vehicle_age"] < 0).sum())
 
 print("\nTest Month Counts:")
 print(df["test_month"].value_counts().sort_index().to_string())
+
+print("\nNumeric Column Types:")
+print(df[numeric_columns].dtypes.to_string())
+
+print("\nMissing Numeric Values:")
+print(df[numeric_columns].isna().sum().to_string())
+
+print("\nNumeric Summary:")
+print(df[numeric_columns].describe().to_string())
+
+print("\nFeature Columns:")
+print(X.columns.tolist())
+
+print("\nFeature Shape:", X.shape)
+print("Target Shape:", y.shape)
