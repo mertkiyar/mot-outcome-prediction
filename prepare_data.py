@@ -253,3 +253,68 @@ print(
 assert not df["fuel_type_standardized"].isin(
     fuel_mapping.keys()
 ).any(), "Unmapped fuel labels remain"
+
+audit_columns = [
+    "vehicle_age",
+    "test_mileage",
+    "cylinder_capacity"
+]
+
+print("\nNumeric Quality Summary:")
+print(
+    df[audit_columns].describe(
+        percentiles=[0.01, 0.5, 0.95, 0.99]
+    ).to_string()
+)
+
+invalid_checks = pd.DataFrame({
+    "negative_vehicle_age": df["vehicle_age"] < 0,
+    "negative_mileage": df["test_mileage"] < 0,
+    "nonpositive_capacity": df["cylinder_capacity"] <= 0
+})
+
+print("\nInvalid Value Counts:")
+print(invalid_checks.sum().to_string())
+
+print("\nZero Mileage Records:", df["test_mileage"].eq(0).sum())
+
+preview_columns = [
+    "test_id",
+    "make",
+    "model",
+    "fuel_type_standardized",
+    "vehicle_age",
+    "test_mileage",
+    "cylinder_capacity"
+]
+
+for column in audit_columns:
+    available_rows = df.dropna(subset=[column])
+
+    print(f"\nLowest Values: {column}")
+    print(
+        available_rows.nsmallest(5, column)[preview_columns]
+        .to_string(index=False)
+    )
+
+    print(f"\nHighest Values: {column}")
+    print(
+        available_rows.nlargest(5, column)[preview_columns]
+        .to_string(index=False)
+    )
+
+electric_with_capacity = (
+    df["fuel_type_standardized"].eq("EL")
+    & df["cylinder_capacity"].notna()
+)
+
+print(
+    "\nElectric Vehicles With Recorded Engine Capacity:",
+    electric_with_capacity.sum()
+)
+
+print(
+    df.loc[electric_with_capacity, preview_columns]
+    .head(15)
+    .to_string(index=False)
+)
