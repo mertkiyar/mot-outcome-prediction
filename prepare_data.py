@@ -49,11 +49,23 @@ for column in numeric_columns:
         errors="coerce"
     )
 
+fuel_mapping = {
+    "ELECTRIC": "EL",
+    "HYBRID ELECTRIC (CLEAN)": "HY"
+}
+
+df["fuel_type_standardized"] = (
+    df["fuel_type"]
+    .str.strip()
+    .str.upper()
+    .replace(fuel_mapping)
+)
+
 feature_columns = [
     "vehicle_age",
     "test_mileage",
     "cylinder_capacity",
-    "fuel_type",
+    "fuel_type_standardized",
     "make",
     "test_month"
 ]
@@ -230,3 +242,14 @@ print(
         ["test_id", "make", "model", "colour", "fuel_type"]
     ].head(15).to_string(index=False)
 )
+
+print("\nStandardized Fuel Type Counts:")
+print(
+    df["fuel_type_standardized"]
+    .value_counts(dropna=False)
+    .to_string()
+)
+
+assert not df["fuel_type_standardized"].isin(
+    fuel_mapping.keys()
+).any(), "Unmapped fuel labels remain"
