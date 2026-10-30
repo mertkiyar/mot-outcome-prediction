@@ -105,3 +105,42 @@ print(X.columns.tolist())
 
 print("\nFeature Shape:", X.shape)
 print("Target Shape:", y.shape)
+
+blank_values = df.apply(
+    lambda column: column.astype("string").str.strip().eq("")
+).fillna(False)
+
+missing_values = df.isna() | blank_values
+
+missing_summary = pd.DataFrame({
+    "missing_count": missing_values.sum(),
+    "missing_percentage": (
+        missing_values.mean() * 100
+    ).round(2)
+})
+
+print("\nMissing Value Summary:")
+print(missing_summary.to_string())
+
+duplicate_row_count = df.duplicated().sum()
+
+print("\nDuplicate Rows:", duplicate_row_count)
+
+duplicate_test_count = df["test_id"].duplicated().sum()
+
+print("Repeated Test IDs:", duplicate_test_count)
+
+if duplicate_test_count > 0:
+    repeated_tests = df[
+        df["test_id"].duplicated(keep=False)
+    ]
+
+    print("\nRepeated Test Preview:")
+    print(repeated_tests.head(10).to_string(index=False))
+
+vehicle_counts = df["vehicle_id"].value_counts()
+repeated_vehicles = vehicle_counts[vehicle_counts > 1]
+
+print("\nUnique Vehicles:", df["vehicle_id"].nunique())
+print("Vehicles With Multiple Records:", len(repeated_vehicles))
+print("Records From These Vehicles:", repeated_vehicles.sum())
